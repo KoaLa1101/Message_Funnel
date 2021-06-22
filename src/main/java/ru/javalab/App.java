@@ -3,6 +3,7 @@ package ru.javalab;
 import com.github.badoualy.telegram.api.Kotlogram;
 import com.github.badoualy.telegram.api.TelegramClient;
 import com.github.badoualy.telegram.mtproto.DataCenter;
+import com.github.badoualy.telegram.mtproto.MTProtoHandler;
 import com.github.badoualy.telegram.mtproto.auth.AuthKeyCreation;
 import com.github.badoualy.telegram.mtproto.auth.AuthResult;
 import com.github.badoualy.telegram.tl.api.*;
@@ -18,55 +19,61 @@ import java.util.Scanner;
 
 /**
  * Hello world!
- *
  */
 public class App {
 
-    public static void main( String[] args )
-    {
-        System.out.println( "Hello World!" );
+    public static void main(String[] args) {
+        System.out.println("Hello World!");
 
-        TelegramClient client = Kotlogram.getDefaultClient(TgConst.application, new ApiStorage());
+        MTProtoHandler mtProtoHandler;
+        ApiStorage apiStorage = new ApiStorage();
+        TelegramClient client = Kotlogram.getDefaultClient(TgConst.application, apiStorage);
+
 
 // You can start making requests
         try {
-            // Send code to account
+// Send code to account
             TLAbsSentCode sentCode = client.authSendCode(TgConst.PHONE_NUMBER, TgConst.API_ID);
             System.out.println("Authentication code: ");
             String code = new Scanner(System.in).nextLine();
 
-            // Auth with the received code
+// Auth with the received code
             TLAuthorization authorization = client.authSignIn(TgConst.PHONE_NUMBER, sentCode.getPhoneCodeHash(), code);
             TLUser self = authorization.getUser().getAsUser();
             System.out.println("You are now signed in as " + self.getFirstName() + " " + self.getLastName() + " @" + self.getUsername());
-            DataCenter prodDC4 = new DataCenter("149.154.167.91", 443);
+
+            /*DataCenter prodDC4 = new DataCenter("149.154.167.91", 443);
             AuthResult authResult = AuthKeyCreation.createAuthKey(prodDC4);
+
 
 // AuthResult contains the active connection, close it if you're not using it :)
             if (authResult != null)
-                authResult.getConnection().close();
+                mtProtoHandler = new MTProtoHandler(authResult, null);
+            else {
+                mtProtoHandler = new MTProtoHandler(prodDC4, apiStorage.loadAuthKey(), null, null);
+            }
+            mtProtoHandler.startWatchdog();
+            System.out.println(mtProtoHandler.getSessionId());
+            mtProtoHandler.ex*/
 
-            // Show 5 last chats
+// Show last mes from unreadable chats
             TLAbsDialogs tlAbsDialogs = client.messagesGetDialogs(0, 0, new TLInputPeerEmpty(), 5);
             HashMap<Integer, String> nameMap = createNameMap(tlAbsDialogs);
             HashMap<Integer, TLAbsMessage> messageMap = new HashMap<>();
             tlAbsDialogs.getMessages().forEach(message -> messageMap.put(message.getId(), message));
-            tlAbsDialogs.getDialogs().forEach(chat ->{
-                if(chat.getUnreadCount()>0) System.out.println(chat);
-            });
-
 
             tlAbsDialogs.getDialogs().forEach(dialog -> {
-                System.out.print(nameMap.get(getId(dialog.getPeer())) + ": ");
-
                 TLAbsMessage topMessage = messageMap.get(dialog.getTopMessage());
-                if (topMessage instanceof TLMessage) {
-                    // The message could also be a file, a photo, a gif, ...
-                    System.out.println(((TLMessage) topMessage).getMessage());
-                } else if (topMessage instanceof TLMessageService) {
-                    TLAbsMessageAction action = ((TLMessageService) topMessage).getAction();
-                    // action defined the type of message (user joined group, ...)
-                    System.out.println("Service message");
+                if (dialog.getUnreadCount() > 0) {
+                    System.out.println(nameMap.get(getId(dialog.getPeer())) + ": ");
+                    if (topMessage instanceof TLMessage) {
+// The message could also be a file, a photo, a gif, ...
+                        System.out.println(((TLMessage) topMessage).getMessage());
+                    } else if (topMessage instanceof TLMessageService) {
+                        TLAbsMessageAction action = ((TLMessageService) topMessage).getAction();
+// action defined the type of message (user joined group, ...)
+                        System.out.println("Service message");
+                    }
                 }
             });
 
@@ -79,7 +86,7 @@ public class App {
     }
 
     public static HashMap<Integer, String> createNameMap(TLAbsDialogs tlAbsDialogs) {
-        // Map peer id to name
+// Map peer id to name
         HashMap<Integer, String> nameMap = new HashMap<>();
 
         tlAbsDialogs.getUsers().stream()

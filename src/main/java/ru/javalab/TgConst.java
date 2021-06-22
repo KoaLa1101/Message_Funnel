@@ -16,5 +16,5 @@ public class TgConst {
     public static TelegramApp application = new TelegramApp(API_ID, API_HASH, MODEL, SYSTEM_VERSION, APP_VERSION, LANG_CODE);
 
     // Phone number used for tests
-    public static final String PHONE_NUMBER = "+79961213878"; // International format
+    public static final String PHONE_NUMBER = "+79656235531"; // International format
 }
