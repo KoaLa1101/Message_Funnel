@@ -17,6 +17,8 @@ public class TelegramBot extends TelegramLongPollingBot implements Bot {
     private String name;
     private String token;
 
+    private String usernameTG;
+
     public TelegramBot(String name, String token) {
         this.name = name;
         this.token = token;
@@ -34,8 +36,15 @@ public class TelegramBot extends TelegramLongPollingBot implements Bot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        String message = update.getMessage().getText();
-        sendMsg(update.getMessage().getChatId().toString(), message);
+        if(update.getMessage().isReply()){
+            String message = update.getMessage().getText();
+            usernameTG = update.getMessage().getFrom().getUserName();
+            sendMsg(update.getMessage().getChatId().toString(), message, update.getMessage().getMessageId(), usernameTG, update.getMessage().getReplyToMessage().getMessageId());
+        } else {
+            String message = update.getMessage().getText();
+            usernameTG = update.getMessage().getFrom().getUserName();
+            sendMsg(update.getMessage().getChatId().toString(), message, update.getMessage().getMessageId(), usernameTG, -1);
+        }
     }
 
     @Override
@@ -52,11 +61,12 @@ public class TelegramBot extends TelegramLongPollingBot implements Bot {
         }
     }
 
-    public synchronized void sendMsg(String chatId, String s) {
+    public synchronized void sendMsg(String chatId, String s, int mesId, String usernameTG, int repMesId) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.enableMarkdown(true);
         sendMessage.setChatId(chatId);
-        sendMessage.setText(s);
+        sendMessage.setReplyToMessageId(mesId);
+        sendMessage.setText("Message from tg " + "\n"+ s + "\n" + "by " + usernameTG + "\n repMesId: " + repMesId);
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
