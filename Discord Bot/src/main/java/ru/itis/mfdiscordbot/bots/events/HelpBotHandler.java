@@ -1,20 +1,21 @@
 package ru.itis.mfdiscordbot.bots.events;
 
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import ru.itis.mfdiscordbot.DiscordBotApp;
-import ru.itis.mfdiscordbot.utils.PropertiesLoader;
-
-import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.List;
+import javax.annotation.Nonnull;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import ru.itis.mfdiscordbot.bots.DiscordBot;
+import ru.itis.mfdiscordbot.utils.PropertiesLoader;
 
 public class HelpBotHandler extends ListenerAdapter {
 
     protected List<String> helpCommands;
+    protected DiscordBot bot;
 
-    public HelpBotHandler(){
+    public HelpBotHandler(DiscordBot bot){
         helpCommands = Arrays.asList(PropertiesLoader.getInstance().getProperty("discord.bot.help-commands").split(", "));
+        this.bot = bot;
     }
 
     @Override

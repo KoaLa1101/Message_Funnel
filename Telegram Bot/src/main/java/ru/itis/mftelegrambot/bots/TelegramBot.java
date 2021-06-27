@@ -67,6 +67,11 @@ public class TelegramBot extends TelegramLongPollingBot implements Bot {
 
     }
 
+    @Override
+    public void init() {
+
+    }
+
     public synchronized void sendMsg(String chatId, String s, int mesId, String usernameTG, int repMesId) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.enableMarkdown(true);
