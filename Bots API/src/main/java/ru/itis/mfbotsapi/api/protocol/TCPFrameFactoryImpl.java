@@ -40,78 +40,22 @@ public class TCPFrameFactoryImpl implements TCPFrameFactory {
     public TCPFrame readTCPFrame(SocketChannel channel) throws TCPFrameFactoryException, IncorrectFCSException {
         TCPFrame result = null;
         try{
-            ObjectInputStream inObject = streams.get(Thread.currentThread().getId());
-            if (inObject == null){
-                inObject = new ObjectInputStream(channel.socket().getInputStream());
-                streams.put(Thread.currentThread().getId(), inObject);
-            }
-            byte framePr = inObject.readByte();
-            byte frameSdf = inObject.readByte();
-            if ((framePr == pr)&&(frameSdf == sdf)) {
-                byte type = inObject.readByte();
-                int dataLength = inObject.readShort();
-                inObject.mark(dataLength + 2);
-                boolean isCorrect = checkFcs(inObject, type, (short) dataLength);
-                inObject.reset();
-                if (isCorrect){
-                    Object[] objects;
-
-                    switch (type){
-                        case 1:
-                            objects = new Object[2];
-                            objects[0] = inObject.readObject(); //Message id
-                            objects[1] = inObject.readObject(); //Bot token
-                            break;
-                        case 2:
-                            objects = new Object[3];
-                            objects[0] = inObject.readObject(); //Message id
-                            objects[1] = inObject.readObject(); //Messenger type
-                            objects[2] = inObject.readObject(); //Bot name
-                            break;
-                        case 3:
-                            objects = new Object[4];
-                            objects[0] = inObject.readObject(); //Message id
-                            objects[1] = inObject.readObject(); //User id
-                            objects[2] = inObject.readObject(); //User nickname
-                            objects[3] = inObject.readObject(); //Message text
-                            break;
-                        case 4:
-                            objects = new Object[3];
-                            objects[0] = inObject.readObject(); //Message id
-                            objects[1] = inObject.readObject(); //User id
-                            objects[2] = inObject.readObject(); //Reply text
-                            break;
-
-                        default:
-                            objects = new Object[0];
-                            break;
-                    }
-
-                    result = new TCPFrame(this, type, objects);
-                } else {
-                    throw new IncorrectFCSException(inObject.readObject());
-                }
-//            ByteBuffer serviceBytesBuffer = ByteBuffer.allocate(5);
-//            channel.read(serviceBytesBuffer);
-//            serviceBytesBuffer.flip();
-//            byte framePr = serviceBytesBuffer.get();
-//            byte frameSdf = serviceBytesBuffer.get();
-//            if ((framePr == pr)&&(frameSdf == sdf)){
-//                byte type = serviceBytesBuffer.get();
-//                int dataLength = serviceBytesBuffer.getShort();
-//                ByteBuffer recvDataBuffer = ByteBuffer.allocate(dataLength + 1);
-//                channel.read(recvDataBuffer);
-//                byte[] recvData = recvDataBuffer.array();
-//                int currentSum = pr + sdf + type + dataLength;
-//                for (int i = 0; i < dataLength; i++){
-//                    currentSum+=recvData[i];
-//                }
-//                byte fcs = (byte) (currentSum%3 << 6 | currentSum%5 << 3 | currentSum%7);
-//                ByteArrayInputStream byteStream = new ByteArrayInputStream(Arrays.copyOfRange(recvData, 0, recvData.length));
-//                ObjectInputStream inObject = new ObjectInputStream(new BufferedInputStream(byteStream));
-//                Object[] objects;
+//            ObjectInputStream inObject = streams.get(Thread.currentThread().getId());
+//            if (inObject == null){
+//                inObject = new ObjectInputStream(channel.socket().getInputStream());
+//                streams.put(Thread.currentThread().getId(), inObject);
+//            }
+//            byte framePr = inObject.readByte();
+//            byte frameSdf = inObject.readByte();
+//            if ((framePr == pr)&&(frameSdf == sdf)) {
+//                byte type = inObject.readByte();
+//                int dataLength = inObject.readShort();
+//                inObject.mark(dataLength + 2);
+//                boolean isCorrect = checkFcs(inObject, type, (short) dataLength);
+//                inObject.reset();
+//                if (isCorrect){
+//                    Object[] objects;
 //
-//                if (recvData[recvData.length-1] == fcs){
 //                    switch (type){
 //                        case 1:
 //                            objects = new Object[2];
@@ -142,12 +86,69 @@ public class TCPFrameFactoryImpl implements TCPFrameFactory {
 //                            objects = new Object[0];
 //                            break;
 //                    }
+//
+//                    result = new TCPFrame(this, type, objects);
 //                } else {
 //                    throw new IncorrectFCSException(inObject.readObject());
 //                }
-//                inObject.close();
-//                byteStream.close();
-//                  result = new TCPFrame(this, type, objects);
+//          ============================================================================================================
+            ByteBuffer serviceBytesBuffer = ByteBuffer.allocate(5);
+            channel.read(serviceBytesBuffer);
+            serviceBytesBuffer.flip();
+            byte framePr = serviceBytesBuffer.get();
+            byte frameSdf = serviceBytesBuffer.get();
+            if ((framePr == pr)&&(frameSdf == sdf)){
+                byte type = serviceBytesBuffer.get();
+                int dataLength = serviceBytesBuffer.getShort();
+                ByteBuffer recvDataBuffer = ByteBuffer.allocate(dataLength + 1);
+                channel.read(recvDataBuffer);
+                byte[] recvData = recvDataBuffer.array();
+                int currentSum = pr + sdf + type + dataLength;
+                for (int i = 0; i < dataLength; i++){
+                    currentSum+=recvData[i];
+                }
+                byte fcs = (byte) (currentSum%3 << 6 | currentSum%5 << 3 | currentSum%7);
+                ByteArrayInputStream byteStream = new ByteArrayInputStream(Arrays.copyOfRange(recvData, 0, recvData.length));
+                ObjectInputStream inObject = new ObjectInputStream(new BufferedInputStream(byteStream));
+                Object[] objects;
+
+                if (recvData[recvData.length-1] == fcs){
+                    switch (type){
+                        case 1:
+                            objects = new Object[2];
+                            objects[0] = inObject.readObject(); //Message id
+                            objects[1] = inObject.readObject(); //Bot token
+                            break;
+                        case 2:
+                            objects = new Object[3];
+                            objects[0] = inObject.readObject(); //Message id
+                            objects[1] = inObject.readObject(); //Messenger type
+                            objects[2] = inObject.readObject(); //Bot name
+                            break;
+                        case 3:
+                            objects = new Object[4];
+                            objects[0] = inObject.readObject(); //Message id
+                            objects[1] = inObject.readObject(); //User id
+                            objects[2] = inObject.readObject(); //User nickname
+                            objects[3] = inObject.readObject(); //Message text
+                            break;
+                        case 4:
+                            objects = new Object[3];
+                            objects[0] = inObject.readObject(); //Message id
+                            objects[1] = inObject.readObject(); //User id
+                            objects[2] = inObject.readObject(); //Reply text
+                            break;
+
+                        default:
+                            objects = new Object[0];
+                            break;
+                    }
+                } else {
+                    throw new IncorrectFCSException(inObject.readObject());
+                }
+                inObject.close();
+                byteStream.close();
+                  result = new TCPFrame(this, type, objects);
             }
             return result;
         } catch (IOException ex) {
