@@ -17,20 +17,21 @@ public class ReplyHandler extends ListenerAdapter {
     @Override
     public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
         Message referencedMessage = event.getMessage().getReferencedMessage();
-        if (referencedMessage != null) {
-            String text = referencedMessage.getContentRaw();
-            int first = text.indexOf(':') + 3;
-            int second = first + 2;
-            while(text.charAt(second) != ' ') {
-                second++;
-            }
-            bot.sendReply(text.substring(first, second) , event.getMessage().getContentRaw());
-        } else {
-            if (!event.getMessage().getAuthor().isBot() && !event.getMessage().getContentRaw().startsWith("/")){
-                event.getMessage().getChannel().sendMessage("Не знаем кому отправлять").queue();
+        if (bot.isActive()) {
+            if (referencedMessage != null) {
+                String text = referencedMessage.getContentRaw();
+                int startId = text.indexOf(':') + 3;
+                int endId = startId + 2;
+                while(text.charAt(endId) != ' ') {
+                    endId++;
+                }
+                bot.sendReply(text.substring(startId, endId) , event.getMessage().getContentRaw());
+            } else {
+                if (!event.getMessage().getAuthor().isBot() && !event.getMessage().getContentRaw().startsWith("/")){
+                    event.getMessage().getChannel().sendMessage("Не знаем кому отправлять").queue();
+                }
             }
         }
-
     }
 
 }

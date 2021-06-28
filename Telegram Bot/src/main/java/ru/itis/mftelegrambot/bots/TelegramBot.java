@@ -1,16 +1,16 @@
 package ru.itis.mftelegrambot.bots;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
-
-import org.apache.log4j.Logger;
 import ru.itis.mfbotsapi.api.utils.Reply;
-import ru.itis.mfbotsapi.bots.Bot;
 import ru.itis.mfbotsapi.bots.SlaveBot;
 import ru.itis.mfbotsapi.bots.exceptions.StartBotException;
 import ru.itis.mftelegrambot.TelegramBotApp;
@@ -23,9 +23,12 @@ public class TelegramBot extends TelegramLongPollingBot implements SlaveBot {
 
     private String usernameTG;
 
+    private Map<String, Long> mesMap;
+
     public TelegramBot(String name, String token) {
         this.name = name;
         this.token = token;
+        mesMap = new HashMap<>();
     }
 
     @Override
@@ -43,6 +46,7 @@ public class TelegramBot extends TelegramLongPollingBot implements SlaveBot {
         String userId = update.getMessage().getFrom().getId().toString();
         String userName = update.getMessage().getFrom().getUserName().toString();
         String text = update.getMessage().getText();
+        mesMap.put(userName, update.getMessage().getChatId());
         TelegramBotApp.sendMessage(userId, userName, text);
     }
 
@@ -85,7 +89,14 @@ public class TelegramBot extends TelegramLongPollingBot implements SlaveBot {
 
     @Override
     public void sendReply(Reply reply) {
-        System.out.println("Пришел ответ от " + reply.getUserId() + ": " + reply.getMessage());
+        SendMessage sendMes = new SendMessage();
+        sendMes.setChatId(String.valueOf(mesMap.get(reply.getUserId())));
+        sendMes.setText(reply.getMessage());
+        try {
+            execute(sendMes);
+        } catch (TelegramApiException e) {
+            logger.log(Level.ERROR, e.toString());
+        }
     }
 
     @Override
