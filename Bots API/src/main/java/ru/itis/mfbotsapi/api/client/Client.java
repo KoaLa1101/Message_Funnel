@@ -10,4 +10,6 @@ public interface Client {
     void connect(InetSocketAddress serverAddress, String connectionToken) throws ClientException;
     void sendTCPFrame (String token, TCPFrame tcpFrame) throws ClientException;
     void disconnect(String targetToken);
+    void start();
+    void stop();
 }

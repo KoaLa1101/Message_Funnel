@@ -37,54 +37,95 @@ public class ManagementClient extends AbstractClient{
     }
 
     @Override
-    public void connect(InetSocketAddress serverAddress, String connectionToken) throws ClientException {
+    public synchronized void connect(InetSocketAddress serverAddress, String connectionToken) throws ClientException {
+        try{
+            SocketChannel slaveSocketChannel = SocketChannel.open(serverAddress);
+            log.info("Установлено соединение с сервером.");
+
+            UUID infoFrameId = UUID.randomUUID();
+            TCPFrame clientInfoTCPFrame = tcpFrameFactory.createTCPFrame(1, infoFrameId, connectionToken);
+            tcpFrameFactory.writeTCPFrame(slaveSocketChannel, clientInfoTCPFrame);
+
+            TCPFrame serverResponseFrame = tcpFrameFactory.readTCPFrame(slaveSocketChannel);
+
+            if ((serverResponseFrame != null) && (serverResponseFrame.getType() == 2)) {
+
+                slaveSocketChannel.configureBlocking(false);
+//                slaveSocketChannel.register(selector, SelectionKey.OP_READ);
+
+                slavesSet.add(SlaveBotEntry.builder()
+                        .token(connectionToken)
+                        .messenger((SlaveBotEntry.Messenger) serverResponseFrame.getContent()[1])
+                        .botName((String) serverResponseFrame.getContent()[2])
+                        .socketChannel(slaveSocketChannel)
+                        .build());
+
+                log.info("Успешно настроено соединение с сервером.");
+            } else {
+                slaveSocketChannel.close();
+                log.warn("Сервер отвечает неправильным протоколом");
+            }
+        } catch (IOException ex) {
+            log.warn("Невозможно установить соединение с сервером: ошибка соединения.");
+            throw new ClientException("Cannot connect client", ex);
+        }
+    }
+
+    @Override
+    public void sendTCPFrame(String token, TCPFrame tcpFrame) throws ClientException {
+        try {
+            for (SlaveBotEntry entry : slavesSet){
+                if (entry.getToken().equals(token)){
+                    tcpFrameFactory.writeTCPFrame(entry.getSocketChannel(), tcpFrame);
+                }
+            }
+        } catch (TCPFrameFactoryException ex) {
+            throw new ClientException(ex.getMessage(), ex);
+        }
+    }
+
+    @Override
+    public void disconnect(String targetToken) {
+        try{
+            for (SlaveBotEntry entry : slavesSet){
+                if (entry.getToken().equals(targetToken)){
+                    entry.getSocketChannel().close();
+                }
+            }
+        } catch (IOException|NullPointerException ex){
+            //ignore
+        }
+    }
+
+    @Override
+    public void start() {
+        try{
+            isWork = true;
+            selector = Selector.open();
+            for (SlaveBotEntry entry : slavesSet){
+                entry.getSocketChannel().register(selector, SelectionKey.OP_READ);
+            }
+        } catch (IOException ex) {
+            log.warn("Невозможно установить соединение с сервером: ошибка соединения.");
+            throw new ClientException("Cannot connect client", ex);
+        }
         Runnable connect = () -> {
             try {
-                isWork = true;
-                selector = Selector.open();
+                while (isWork) {
+                    selector.select();
+                    Set<SelectionKey> selectionKeys = selector.selectedKeys();
+                    Iterator<SelectionKey> iterator = selectionKeys.iterator();
+                    while (iterator.hasNext()) {
+                        SelectionKey key = iterator.next();
 
-                SocketChannel slaveSocketChannel = SocketChannel.open(serverAddress);
-                log.info("Установлено соединение с сервером.");
-
-                UUID infoFrameId = UUID.randomUUID();
-                TCPFrame clientInfoTCPFrame = tcpFrameFactory.createTCPFrame(1, infoFrameId, connectionToken);
-                tcpFrameFactory.writeTCPFrame(slaveSocketChannel, clientInfoTCPFrame);
-
-                TCPFrame serverResponseFrame = tcpFrameFactory.readTCPFrame(slaveSocketChannel);
-
-                if ((serverResponseFrame != null) && (serverResponseFrame.getType() == 2)) {
-
-                    slaveSocketChannel.configureBlocking(false);
-                    slaveSocketChannel.register(selector, SelectionKey.OP_READ);
-
-                    slavesSet.add(SlaveBotEntry.builder()
-                            .token(connectionToken)
-                            .messenger((SlaveBotEntry.Messenger) serverResponseFrame.getContent()[1])
-                            .botName((String) serverResponseFrame.getContent()[2])
-                            .socketChannel(slaveSocketChannel)
-                            .build());
-
-                    log.info("Успешно настроено соединение с сервером.");
-
-                    while (isWork) {
-                        selector.select();
-                        Set<SelectionKey> selectionKeys = selector.selectedKeys();
-                        Iterator<SelectionKey> iterator = selectionKeys.iterator();
-                        while (iterator.hasNext()) {
-                            SelectionKey key = iterator.next();
-
-                            if (key.isReadable()) {
-                                keyManager.read(this, key);
-                            }
-                            if (key.isWritable()) {
-                                keyManager.write(this);
-                            }
-                            iterator.remove();
+                        if (key.isReadable()) {
+                            keyManager.read(this, key);
                         }
+                        if (key.isWritable()) {
+                            keyManager.write(this);
+                        }
+                        iterator.remove();
                     }
-                } else {
-                    slaveSocketChannel.close();
-                    log.warn("Сервер отвечает неправильным протоколом");
                 }
             } catch (UnresolvedAddressException ex) {
                 log.warn("Неправильный адрес, привет");
@@ -125,28 +166,12 @@ public class ManagementClient extends AbstractClient{
     }
 
     @Override
-    public void sendTCPFrame(String token, TCPFrame tcpFrame) throws ClientException {
-        try {
-            for (SlaveBotEntry entry : slavesSet){
-                if (entry.getToken().equals(token)){
-                    tcpFrameFactory.writeTCPFrame(entry.getSocketChannel(), tcpFrame);
-                }
-            }
-        } catch (TCPFrameFactoryException ex) {
-            throw new ClientException(ex.getMessage(), ex);
-        }
-    }
-
-    @Override
-    public void disconnect(String targetToken) {
-        isWork = false;
+    public void stop() {
         try{
-            for (SlaveBotEntry entry : slavesSet){
-                if (entry.getToken().equals(targetToken)){
-                    entry.getSocketChannel().close();
-                }
-            }
-        } catch (IOException|NullPointerException ex){
+            isWork = false;
+            selector.close();
+            this.selector = null;
+        } catch (Exception ex) {
             //ignore
         }
     }

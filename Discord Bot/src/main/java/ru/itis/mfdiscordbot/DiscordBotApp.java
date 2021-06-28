@@ -44,6 +44,7 @@ public class DiscordBotApp {
     }
 
     public static void handleNewConfig(List<String> tokens){
+        managementClient.stop();
         for (SlaveBotEntry entry : managementClient.getSlavesSet()){
             if (!tokens.contains(entry.getToken())){
                 managementClient.disconnect(entry.getToken());
@@ -54,9 +55,14 @@ public class DiscordBotApp {
                 .collect(Collectors.toList());
         for (String token : tokens){
             if (!currentTokens.contains(token)){
-                managementClient.connect(getAddressByToken(token), token);
+                try{
+                    managementClient.connect(getAddressByToken(token), token);
+                } catch (Exception ex){
+                    log.warn("Cannot connect to bot with token " + token);
+                }
             }
         }
+        managementClient.start();
     }
 
     protected static InetSocketAddress getAddressByToken(String token){
