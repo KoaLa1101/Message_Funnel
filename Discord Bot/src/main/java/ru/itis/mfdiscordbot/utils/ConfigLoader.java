@@ -61,7 +61,11 @@ public class ConfigLoader {
             if (Files.exists(filePath) && !isBotStarting) {
                 Files.delete(filePath);
             }
-            Files.createFile(filePath);
+            try {
+                Files.createFile(filePath);
+            } catch (FileAlreadyExistsException e){
+                //ignore
+            }
         }  catch (IOException e) {
             log.error("Cannot create " + fileName + " file. " + e.getMessage());
             //TODO throw exception

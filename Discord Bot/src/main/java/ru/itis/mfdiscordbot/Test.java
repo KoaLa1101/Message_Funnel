@@ -11,11 +11,12 @@ import ru.itis.mfdiscordbot.utils.IdentityLoader;
 
 public class Test {
     public static void main(String[] args) throws Exception{
-//        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-//        BotConfig[] botConfigs = mapper.readValue(new File("configs/abc.yaml"), BotConfig[].class);
-//
-//        for (int i = 0; i < botConfigs.length; i++) {
-//            System.out.println(botConfigs[i].toString());
-//        }
+        String text = "(@Message_Funnel_bot)Телеграм: @Erik_Nasibullin - test";
+        int first = text.indexOf(':') + 2;
+        int second = first + 2;
+        while(text.charAt(second) != ' ') {
+            second++;
+        }
+        System.out.println(text.substring(first, second));
     }
 }

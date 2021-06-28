@@ -14,18 +14,17 @@ public class ReplyHandler extends ListenerAdapter {
         this.bot = bot;
     }
 
-    //     (@Test_Bot)Телеграм:( @naserik)Erik - пошел оотсюдава
     @Override
     public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
         Message referencedMessage = event.getMessage().getReferencedMessage();
         if (referencedMessage != null) {
             String text = referencedMessage.getContentRaw();
-            int first = text.indexOf(':') + 2;
+            int first = text.indexOf(':') + 3;
             int second = first + 2;
-            while(text.charAt(second) != ')') {
+            while(text.charAt(second) != ' ') {
                 second++;
             }
-            bot.sendReply(text.substring(first+1, second) , event.getMessage().getContentRaw());
+            bot.sendReply(text.substring(first, second) , event.getMessage().getContentRaw());
         } else {
             if (!event.getMessage().getAuthor().isBot() && !event.getMessage().getContentRaw().startsWith("/")){
                 event.getMessage().getChannel().sendMessage("Не знаем кому отправлять").queue();

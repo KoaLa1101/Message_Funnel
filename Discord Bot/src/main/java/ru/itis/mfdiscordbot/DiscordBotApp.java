@@ -38,7 +38,6 @@ public class DiscordBotApp {
     }
 
     public static void replyOnMessage(String token, Reply reply){
-        System.out.println("Клиент отправляет....");
         managementClient.sendTCPFrame(token, managementClient.getTcpFrameFactory()
                 .createTCPFrame(4, UUID.randomUUID().toString(),
                         reply.getUserId(), reply.getMessage()));

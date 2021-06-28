@@ -9,10 +9,13 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 import org.apache.log4j.Logger;
+import ru.itis.mfbotsapi.api.utils.Reply;
 import ru.itis.mfbotsapi.bots.Bot;
+import ru.itis.mfbotsapi.bots.SlaveBot;
 import ru.itis.mfbotsapi.bots.exceptions.StartBotException;
+import ru.itis.mftelegrambot.TelegramBotApp;
 
-public class TelegramBot extends TelegramLongPollingBot implements Bot {
+public class TelegramBot extends TelegramLongPollingBot implements SlaveBot {
     private Logger logger;
 
     private String name;
@@ -37,15 +40,10 @@ public class TelegramBot extends TelegramLongPollingBot implements Bot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        if(update.getMessage().isReply()){
-            String message = update.getMessage().getText();
-            usernameTG = update.getMessage().getFrom().getUserName();
-            sendMsg(update.getMessage().getChatId().toString(), message, update.getMessage().getMessageId(), usernameTG, update.getMessage().getReplyToMessage().getMessageId());
-        } else {
-            String message = update.getMessage().getText();
-            usernameTG = update.getMessage().getFrom().getUserName();
-            sendMsg(update.getMessage().getChatId().toString(), message, update.getMessage().getMessageId(), usernameTG, -1);
-        }
+        String userId = update.getMessage().getFrom().getId().toString();
+        String userName = update.getMessage().getFrom().getUserName().toString();
+        String text = update.getMessage().getText();
+        TelegramBotApp.sendMessage(userId, userName, text);
     }
 
     @Override
@@ -83,5 +81,15 @@ public class TelegramBot extends TelegramLongPollingBot implements Bot {
         } catch (TelegramApiException e) {
             logger.log(Level.ERROR, e.toString());
         }
+    }
+
+    @Override
+    public void sendReply(Reply reply) {
+        System.out.println("Пришел ответ от " + reply.getUserId() + ": " + reply.getMessage());
+    }
+
+    @Override
+    public String getBotName() {
+        return name;
     }
 }

@@ -95,7 +95,9 @@ public class DiscordBot implements MasterBot {
     }
 
     public void sendReply(String userId, String message) {
+        System.out.println(userId + ", " + message);
         for (IdentityConfig config: identities) {
+            System.out.println(config.toString());
             if (config.getId().equals(userId)) {
                 DiscordBotApp.replyOnMessage(config.getToken(), Reply.builder().userId(userId).message(message).build());
                 return;
@@ -106,7 +108,7 @@ public class DiscordBot implements MasterBot {
 
     @Override
     public void sendMessage(Message message) {
-        IdentityConfig newIdentity = new IdentityConfig(message.getUserId(), message.getToken());
+        IdentityConfig newIdentity = new IdentityConfig(message.getUserNickname(), message.getToken());
 
         boolean isContains = false;
         for (IdentityConfig identity: identities) {
@@ -120,18 +122,15 @@ public class DiscordBot implements MasterBot {
             identities.add(newIdentity);
             identityLoader.write(newIdentity);
         }
-        //     (@Test_Bot)Телеграм: (@naserik)Erik - пошел отсюдава
 
-        StringBuilder text = new StringBuilder("(" + message.getBotName() + ")");
+        StringBuilder text = new StringBuilder("(@" + message.getBotName() + ")");
 
         switch (message.getMessenger()) {
             case TELEGRAM:
                 text.append("Телеграм: ");
         }
         text
-                .append("(")
-                .append(message.getUserId())
-                .append(")")
+                .append("@")
                 .append(message.getUserNickname())
                 .append(" - ")
                 .append(message.getText());
