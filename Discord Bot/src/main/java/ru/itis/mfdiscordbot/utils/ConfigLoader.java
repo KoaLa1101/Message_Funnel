@@ -68,7 +68,6 @@ public class ConfigLoader {
             }
         }  catch (IOException e) {
             log.error("Cannot create " + fileName + " file. " + e.getMessage());
-            //TODO throw exception
         }
 
         return filePath;

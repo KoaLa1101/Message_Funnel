@@ -1,8 +1,8 @@
 package ru.itis.mfdiscordbot.bots;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import javax.security.auth.login.LoginException;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
@@ -26,7 +26,7 @@ public class DiscordBot implements MasterBot {
 
     private JDA bot;
     private boolean isActive;
-    private String token;
+    private final String token;
     private List<IdentityConfig> identities;
     private MessageChannel mainMessageChannel;
     private IdentityLoader identityLoader;
@@ -37,12 +37,13 @@ public class DiscordBot implements MasterBot {
 
     @Override
     public void init() throws InitBotException {
+        log.info("Initializing discord bot...");
         try {
             bot = JDABuilder.createDefault(token).build();
             identityLoader = new IdentityLoader();
             isActive = false;
         } catch (LoginException e) {
-            log.error(e.getMessage());
+            log.error("Discord bot cannot starts. " + e.getMessage());
             throw new StartBotException("Discord bot cannot starts. " + e.getMessage());
         }
         addEventListeners();
@@ -62,6 +63,7 @@ public class DiscordBot implements MasterBot {
 
 
     private void addEventListeners() {
+        log.debug("Adding event handlers...");
         bot.addEventListener(
                 new StartBotHandler(this),
                 new StopBotHandler(this),
@@ -84,64 +86,70 @@ public class DiscordBot implements MasterBot {
     }
 
     public void connect(BotConfig[] configs) {
+        log.debug("Connecting to " + Arrays.toString(configs) + "...");
         List<String> tokens = new ArrayList<>();
-
         for (int i = 0; i < configs.length; i++) {
             tokens.add(configs[i].getToken());
         }
         DiscordBotApp.handleNewConfig(tokens);
-
         identities = identityLoader.readAll();
+        log.debug("Connected");
     }
 
-    public void sendReply(String userId, String message) {
-        System.out.println(userId + ", " + message);
+    public void sendReply(String userId, String message, String botId) {
+        log.debug("Trying to send reply to " + userId + ", message " + message + ", botId " + botId);
         for (IdentityConfig config: identities) {
-            System.out.println(config.toString());
-            if (config.getId().equals(userId)) {
+            if (config.getUserId().equals(userId) && config.getBotId().equals(botId)) {
                 DiscordBotApp.replyOnMessage(config.getToken(), Reply.builder().userId(userId).message(message).build());
+                log.debug("Reply sent");
                 return;
             }
         }
+        log.warn("Cannot find where to send");
     }
 
 
     @Override
     public void sendMessage(Message message) {
-        IdentityConfig newIdentity = new IdentityConfig(message.getUserNickname(), message.getToken());
+        log.debug("Received message from server: " + message.toString());
+        updateIdentity(message);
+        mainMessageChannel.sendMessage(buildTextToAnswer(message)).queue();
+    }
 
+    private void updateIdentity(Message message) {
+        IdentityConfig newIdentity = new IdentityConfig(message.getUserNickname(), message.getToken(), message.getBotName());
         boolean isContains = false;
         for (IdentityConfig identity: identities) {
-            if(identity.getId().equals(message.getUserId())) {
+            if(identity.getUserId().equals(message.getUserNickname()) && identity.getToken().equals(message.getToken()) && identity.getBotId().equals(message.getBotName())) {
+                log.debug("Identity already exists");
                 isContains = true;
                 break;
             }
         }
-
         if (!isContains) {
+            log.debug("Cannot find identity, saving");
             identities.add(newIdentity);
             identityLoader.write(newIdentity);
         }
+    }
 
+    // (@BotName) Телеграм: @Username - message
+    private String buildTextToAnswer(Message message) {
         StringBuilder text = new StringBuilder("(@" + message.getBotName() + ")");
-
         switch (message.getMessenger()) {
             case TELEGRAM:
                 text.append("Телеграм: ");
         }
         text
-                .append("@")
-                .append(message.getUserNickname())
-                .append(" - ")
-                .append(message.getText());
-        mainMessageChannel.sendMessage(text).queue();
+          .append("@")
+          .append(message.getUserNickname())
+          .append(" - ")
+          .append(message.getText());
+        return text.toString();
     }
 
     public void setMessageChannel(MessageChannel messageChannel) {
         this.mainMessageChannel = messageChannel;
     }
 
-    public MessageChannel getMessageChannel() {
-        return mainMessageChannel;
-    }
 }

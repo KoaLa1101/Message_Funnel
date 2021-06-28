@@ -1,24 +1,24 @@
 package ru.itis.mfdiscordbot;
 
+import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import ru.itis.mfbotsapi.api.client.ManagementClient;
 import ru.itis.mfbotsapi.api.protocol.TCPFrameFactoryImpl;
 import ru.itis.mfbotsapi.api.utils.ManagementClientKeyManager;
 import ru.itis.mfbotsapi.api.utils.Reply;
 import ru.itis.mfbotsapi.api.utils.SlaveBotEntry;
+import ru.itis.mfbotsapi.bots.MasterBot;
 import ru.itis.mfbotsapi.bots.exceptions.StartBotException;
 import ru.itis.mfdiscordbot.bots.DiscordBot;
 import ru.itis.mfdiscordbot.utils.PropertiesLoader;
 
-import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
 @Slf4j
 public class DiscordBotApp {
 
-    protected static DiscordBot discordBot;
+    protected static MasterBot discordBot;
     protected static ManagementClient managementClient;
 
     public static void main(String[] args) {

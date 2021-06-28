@@ -39,11 +39,13 @@ public class TelegramBotApp {
     private static void startServer(SlaveBot bot) {
         server = ConnectionServer.init(new ConnectionServerKeyManager(),
           new TCPFrameFactoryImpl((byte) 0XCC, (byte) 0xDD, 2048, 64, 0),
-          "key05467",
+//          "key05467",
+          "key05468",
           SlaveBotEntry.Messenger.TELEGRAM,
           bot
         );
-        InetSocketAddress tcpAddress = new InetSocketAddress("localhost", 5467);
+//        InetSocketAddress tcpAddress = new InetSocketAddress("localhost", 5467);
+        InetSocketAddress tcpAddress = new InetSocketAddress("localhost", 5468);
         Runnable runnable = () ->
         {
             try {
@@ -57,7 +59,6 @@ public class TelegramBotApp {
     }
 
     public static void sendMessage(String userid, String userName, String text) {
-        System.out.println(userid + " " + userName + " " + text);
         server.sendTCPFrame(server.getTcpFrameFactory().createTCPFrame(3,
           UUID.randomUUID().toString(),
           userid,

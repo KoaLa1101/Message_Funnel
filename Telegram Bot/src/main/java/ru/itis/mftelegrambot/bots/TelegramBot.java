@@ -43,6 +43,7 @@ public class TelegramBot extends TelegramLongPollingBot implements SlaveBot {
 
     @Override
     public void onUpdateReceived(Update update) {
+        System.out.println(update.getMessage().getFrom().getUserName() + " прислал: " + update.getMessage().getText());
         String userId = update.getMessage().getFrom().getId().toString();
         String userName = update.getMessage().getFrom().getUserName().toString();
         String text = update.getMessage().getText();
@@ -74,18 +75,18 @@ public class TelegramBot extends TelegramLongPollingBot implements SlaveBot {
 
     }
 
-    public synchronized void sendMsg(String chatId, String s, int mesId, String usernameTG, int repMesId) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.enableMarkdown(true);
-        sendMessage.setChatId(chatId);
-        sendMessage.setReplyToMessageId(mesId);
-        sendMessage.setText("Message from tg " + "\n"+ s + "\n" + "by " + usernameTG + "\n repMesId: " + repMesId);
-        try {
-            execute(sendMessage);
-        } catch (TelegramApiException e) {
-            logger.log(Level.ERROR, e.toString());
-        }
-    }
+//    public synchronized void sendMsg(String chatId, String s, int mesId, String usernameTG, int repMesId) {
+//        SendMessage sendMessage = new SendMessage();
+//        sendMessage.enableMarkdown(true);
+//        sendMessage.setChatId(chatId);
+//        sendMessage.setReplyToMessageId(mesId);
+//        sendMessage.setText("Message from tg " + "\n"+ s + "\n" + "by " + usernameTG + "\n repMesId: " + repMesId);
+//        try {
+//            execute(sendMessage);
+//        } catch (TelegramApiException e) {
+//            logger.log(Level.ERROR, e.toString());
+//        }
+//    }
 
     @Override
     public void sendReply(Reply reply) {

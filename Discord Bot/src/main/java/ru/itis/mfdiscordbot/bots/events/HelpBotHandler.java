@@ -23,10 +23,15 @@ public class HelpBotHandler extends ListenerAdapter {
         if (helpCommands.contains(event.getMessage().getContentRaw().toLowerCase())){
             event.getChannel().sendMessage("(/start | /старт) - запустить бота\n" +
                     "(/stop | /стоп) - приостановить работу бота\n" +
-                    "(/config | /конфиг) [add | remove] TOKEN - сконфигурировать зависимых ботов\n" +
-                    "\t*(add | добавить) - добавить нового зависимого бота\n" +
-                    "\t*(remove | удалить) - удалить текущего зависимого бота" +
-                    "\tTOKEN - уникальное значение токена, определяющего бота.")
+                    "(/config | /конфиг) + YAML файл - сконфигурировать зависимых ботов\n" +
+                    "\tВажно отправлять файл вместе с командой (т.е. прикрепить файл и написать к нему комментарий-команду /config)\n" +
+                    "\tФайл должен содержать все токены, к которым Вы хотите подключиться\n" +
+                    "\tПервый символ знак минус, далее через пробел запись вида token: 1234, где 1234 - токен бота\n" +
+                    "\tПример конфиг-файла:\n" +
+                    "\t- token: Cwg3edb66gxSDogtQHZpbNIQpA03212\n" +
+                    "\t- token: NzQ0NTE0OTQ4OTE4NTQyMzM24342\n" +
+                    "\t- token: XzkVlA54321\n"
+                    )
                     .queue();
         }
     }

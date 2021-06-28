@@ -1,8 +1,9 @@
 package ru.itis.mfdiscordbot.config;
 
+import java.util.Objects;
+
 public class BotConfig {
     private String token;
-    private int port;
 
     public String getToken() {
         return token;
@@ -12,19 +13,23 @@ public class BotConfig {
         this.token = token;
     }
 
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
     @Override
     public String toString() {
         return "BotConfig{" +
           "token='" + token + '\'' +
-          ", port=" + port +
           '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BotConfig botConfig = (BotConfig) o;
+        return Objects.equals(token, botConfig.token);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(token);
     }
 }

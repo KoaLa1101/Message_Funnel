@@ -11,9 +11,6 @@ import ru.itis.mfdiscordbot.config.BotConfig;
 import ru.itis.mfdiscordbot.utils.ConfigLoader;
 import ru.itis.mfdiscordbot.utils.PropertiesLoader;
 
-//import org.yaml.snakeyaml.Yaml;
-//import org.yaml.snakeyaml.constructor.Constructor;
-
 @Slf4j
 public class ConfigBotHandler extends ListenerAdapter {
 
@@ -31,15 +28,13 @@ public class ConfigBotHandler extends ListenerAdapter {
             BotConfig[] configs = ConfigLoader.getBotConfigs(event.getMessage().getAttachments().get(0));
             if (checkConfig(configs)) {
                 bot.connect(configs);
-                for (int i = 0; i < configs.length; i++) {
-                    event.getChannel().sendMessage("Имитирую подключение к боту с токеном " + configs[i].getToken()).queue();
-                }
+            } else {
+                event.getChannel().sendMessage("Неверный или пустой конифг файл, напишите /help чтобы узнать подходящий формат").queue();
             }
         }
     }
 
     protected boolean checkConfig(BotConfig[] config) {
-        //TODO aaaaa
-        return true;
+        return config.length != 0;
     }
 }
