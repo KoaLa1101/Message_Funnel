@@ -39,13 +39,11 @@ public class TelegramBotApp {
     private static void startServer(SlaveBot bot) {
         server = ConnectionServer.init(new ConnectionServerKeyManager(),
           new TCPFrameFactoryImpl((byte) 0XCC, (byte) 0xDD, 2048, 64, 0),
-//          "key05467",
-          "key05468",
+          PropertiesLoader.getInstance().getProperty(PropertiesConstants.TELEGRAM_BOT_LTOKEN),
           SlaveBotEntry.Messenger.TELEGRAM,
           bot
         );
-//        InetSocketAddress tcpAddress = new InetSocketAddress("localhost", 5467);
-        InetSocketAddress tcpAddress = new InetSocketAddress("localhost", 5468);
+        InetSocketAddress tcpAddress = new InetSocketAddress("localhost", Integer.parseInt(PropertiesLoader.getInstance().getProperty(PropertiesConstants.TELEGRAM_BOT_PORT)));
         Runnable runnable = () ->
         {
             try {

@@ -14,6 +14,8 @@ import ru.itis.mfbotsapi.api.utils.Reply;
 import ru.itis.mfbotsapi.bots.SlaveBot;
 import ru.itis.mfbotsapi.bots.exceptions.StartBotException;
 import ru.itis.mftelegrambot.TelegramBotApp;
+import ru.itis.mftelegrambot.utils.PropertiesConstants;
+import ru.itis.mftelegrambot.utils.PropertiesLoader;
 
 public class TelegramBot extends TelegramLongPollingBot implements SlaveBot {
     private Logger logger;
@@ -44,11 +46,43 @@ public class TelegramBot extends TelegramLongPollingBot implements SlaveBot {
     @Override
     public void onUpdateReceived(Update update) {
         System.out.println(update.getMessage().getFrom().getUserName() + " прислал: " + update.getMessage().getText());
-        String userId = update.getMessage().getFrom().getId().toString();
-        String userName = update.getMessage().getFrom().getUserName().toString();
-        String text = update.getMessage().getText();
-        mesMap.put(userName, update.getMessage().getChatId());
-        TelegramBotApp.sendMessage(userId, userName, text);
+        if(update.getMessage().getText().equals("/start")) {
+            SendMessage sendMessage = new SendMessage();
+            sendMessage.setChatId(String.valueOf(update.getMessage().getChatId()));
+            sendMessage.setText("Hello, my dear friend! \n The bot forwards all discord messages to Message_Funnel_Bot");
+            try {
+                execute(sendMessage);
+            } catch (TelegramApiException e) {
+                logger.log(Level.ERROR, e.getMessage());
+            }
+        }
+        else if(update.getMessage().getText().equals("/token")) {
+            SendMessage sendMessage = new SendMessage();
+            sendMessage.setChatId(String.valueOf(update.getMessage().getChatId()));
+            sendMessage.setText(PropertiesLoader.getInstance().getProperty(PropertiesConstants.TELEGRAM_BOT_LTOKEN));
+            try {
+                execute(sendMessage);
+            } catch (TelegramApiException e) {
+                logger.log(Level.ERROR, e.getMessage());
+            }
+        }
+        else if(update.getMessage().getText().equals("/version")) {
+            SendMessage sendMessage = new SendMessage();
+            sendMessage.setChatId(String.valueOf(update.getMessage().getChatId()));
+            sendMessage.setText(PropertiesLoader.getInstance().getProperty(PropertiesConstants.TELEGRAM_BOT_VERSION));
+            try {
+                execute(sendMessage);
+            } catch (TelegramApiException e) {
+                logger.log(Level.ERROR, e.getMessage());
+            }
+        }
+        else {
+            String userId = update.getMessage().getFrom().getId().toString();
+            String userName = update.getMessage().getFrom().getUserName().toString();
+            String text = update.getMessage().getText();
+            mesMap.put(userName, update.getMessage().getChatId());
+            TelegramBotApp.sendMessage(userId, userName, text);
+        }
     }
 
     @Override
