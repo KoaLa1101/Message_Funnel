@@ -1,5 +1,6 @@
 package ru.itis.mfdiscordbot.config;
 
+
 import java.util.Objects;
 
 public class BotConfig {

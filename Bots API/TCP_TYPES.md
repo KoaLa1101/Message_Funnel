@@ -5,20 +5,20 @@
 
 ### 0 : re-query in case of fcs distortion
 
-###### order - message id
+###### order - botMessage id
 
 ### 1-2 : registration frames
 
 #### (1) management-client - contains bot token
-###### order - message id and bot token.
+###### order - botMessage id and bot token.
 
 #### (2) connection-server - answer on current token and successfully connection
-###### order - message id, messengerType and botName
+###### order - botMessage id, messengerType and botName
 
-### 3 : connection-server - send new message from user. Contains userId, userNickname, messageText
-###### order - message id, userId, userNickname and messageText
+### 3 : connection-server - send new botMessage from user. Contains userId, userNickname, messageText
+###### order - botMessage id, userId, userNickname and messageText
 
-### 4 : management-client - reply on some message. Contains userId, replyText
-###### order - message id, userId and replyText
+### 4 : management-client - reply on some botMessage. Contains userId, replyText
+###### order - botMessage id, userId and replyText
 
 /*---------------------------------------------------------------------------*\

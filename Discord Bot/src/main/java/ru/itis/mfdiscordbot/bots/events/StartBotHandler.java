@@ -24,9 +24,11 @@ public class StartBotHandler extends ListenerAdapter {
     public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
         if (startCommands.contains(event.getMessage().getContentRaw().toLowerCase())){
             if (!bot.isActive()){
-                bot.start();
+                if (welcomeMessage != null){
+                    event.getChannel().sendMessage(welcomeMessage).queue();
+                }
                 bot.setMessageChannel(event.getChannel());
-                event.getChannel().sendMessage(welcomeMessage).queue();
+                bot.start();
             } else {
                 event.getChannel().sendMessage("Бот уже работает").queue();
             }

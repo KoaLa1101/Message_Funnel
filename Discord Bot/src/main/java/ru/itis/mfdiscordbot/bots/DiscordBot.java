@@ -8,8 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.MessageChannel;
-import ru.itis.mfbotsapi.api.utils.Message;
-import ru.itis.mfbotsapi.api.utils.Reply;
+import ru.itis.mfbotsapi.api.utils.*;
 import ru.itis.mfbotsapi.bots.MasterBot;
 import ru.itis.mfbotsapi.bots.exceptions.InitBotException;
 import ru.itis.mfbotsapi.bots.exceptions.StartBotException;
@@ -69,7 +68,10 @@ public class DiscordBot implements MasterBot {
                 new StopBotHandler(this),
                 new HelpBotHandler(this),
                 new ReplyHandler(this),
-                new ConfigBotHandler(this)
+                new ConfigBotHandler(this),
+                new RebootConnectionsHandler(this),
+                new VersionHandler(this),
+                new ConnectionsHandler(this)
                 );
     }
 
@@ -81,19 +83,26 @@ public class DiscordBot implements MasterBot {
         isActive = active;
     }
 
-    private void connect() {
+    public void connect() {
         connect(ConfigLoader.getBotConfigs());
     }
 
     public void connect(BotConfig[] configs) {
-        log.debug("Connecting to " + Arrays.toString(configs) + "...");
-        List<String> tokens = new ArrayList<>();
-        for (int i = 0; i < configs.length; i++) {
-            tokens.add(configs[i].getToken());
+        try{
+            log.debug("Connecting to " + Arrays.toString(configs) + "...");
+            List<String> tokens = new ArrayList<>();
+            for (int i = 0; i < configs.length; i++) {
+                tokens.add(configs[i].getToken());
+            }
+            DiscordBotApp.handleNewConfig(tokens);
+            identities = identityLoader.readAll();
+            log.debug("Connected");
+        } catch (Exception ex){
+            sendMessage(ErrorMessage.builder()
+                    .text("Невозможно запустить бота в данный момент - проверьте логи.")
+                    .build());
+            log.error(Arrays.toString(ex.getStackTrace()).replace(",", "\n"));
         }
-        DiscordBotApp.handleNewConfig(tokens);
-        identities = identityLoader.readAll();
-        log.debug("Connected");
     }
 
     public void sendReply(String userId, String message, String botId) {
@@ -111,12 +120,20 @@ public class DiscordBot implements MasterBot {
 
     @Override
     public void sendMessage(Message message) {
-        log.debug("Received message from server: " + message.toString());
-        updateIdentity(message);
-        mainMessageChannel.sendMessage(buildTextToAnswer(message)).queue();
+        if (message instanceof BotMessage){
+            log.debug("Received message from server: " + message.toString());
+            updateIdentity((BotMessage) message);
+            mainMessageChannel.sendMessage(buildTextToAnswer((BotMessage) message)).queue();
+        } else if (message instanceof ErrorMessage) {
+            mainMessageChannel.sendMessage(((ErrorMessage) message).getText()).queue();
+        } else if (message instanceof WarningMessage){
+            mainMessageChannel.sendMessage(((WarningMessage) message).getText()).queue();
+        } else if (message instanceof NotificationMessage){
+            mainMessageChannel.sendMessage(((NotificationMessage) message).getText()).queue();
+        }
     }
 
-    private void updateIdentity(Message message) {
+    private void updateIdentity(BotMessage message) {
         IdentityConfig newIdentity = new IdentityConfig(message.getUserNickname(), message.getToken(), message.getBotName());
         boolean isContains = false;
         for (IdentityConfig identity: identities) {
@@ -134,7 +151,7 @@ public class DiscordBot implements MasterBot {
     }
 
     // (@BotName) Телеграм: @Username - message
-    private String buildTextToAnswer(Message message) {
+    private String buildTextToAnswer(BotMessage message) {
         StringBuilder text = new StringBuilder("(@" + message.getBotName() + ")");
         switch (message.getMessenger()) {
             case TELEGRAM:
@@ -147,6 +164,8 @@ public class DiscordBot implements MasterBot {
           .append(message.getText());
         return text.toString();
     }
+
+
 
     public void setMessageChannel(MessageChannel messageChannel) {
         this.mainMessageChannel = messageChannel;

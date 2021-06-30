@@ -8,6 +8,7 @@ import ru.itis.mfbotsapi.api.protocol.TCPFrame;
 import ru.itis.mfbotsapi.api.protocol.TCPFrameFactory;
 import ru.itis.mfbotsapi.api.utils.ClientKeyManager;
 import ru.itis.mfbotsapi.api.utils.SlaveBotEntry;
+import ru.itis.mfbotsapi.api.utils.WarningMessage;
 import ru.itis.mfbotsapi.bots.MasterBot;
 
 import java.io.IOException;
@@ -90,6 +91,7 @@ public class ManagementClient extends AbstractClient{
             for (SlaveBotEntry entry : slavesSet){
                 if (entry.getToken().equals(targetToken)){
                     entry.getSocketChannel().close();
+                    slavesSet.remove(entry);
                 }
             }
         } catch (IOException|NullPointerException ex){
@@ -141,21 +143,17 @@ public class ManagementClient extends AbstractClient{
                 //TODO reaction
             } catch (ClientDisconnectException ex) {
                 ex.getSelectionKey().cancel();
-                try{
-                    if (slavesSet!=null){
-                        for (SlaveBotEntry slaveBotEntry: slavesSet) {
-                            if (slaveBotEntry.getSocketChannel().equals(ex.getSelectionKey().channel())){
-                                slavesSet.remove(slaveBotEntry);
-                            }
+                if (slavesSet!=null){
+                    for (SlaveBotEntry slaveBotEntry: slavesSet) {
+                        if (slaveBotEntry.getSocketChannel().equals(ex.getSelectionKey().channel())){
+                            slavesSet.remove(slaveBotEntry);
+                            bot.sendMessage(WarningMessage.builder()
+                                    .text("Соединение по токену " + slaveBotEntry.getToken() + " было разорвано.")
+                                    .build());
                         }
                     }
-                    log.info("Client " + ex.getSelectionKey().channel() + " was disconnected");
-                    selector.close();
-                    log.info("Разрыв соединения с сервером.");
-                } catch (IOException exx){
-                    //ignore
                 }
-                throw new ClientException(ex);
+                log.info("Client " + ex.getSelectionKey().channel() + " was disconnected");
             } catch (ClosedSelectorException ex){
                 log.info("Клиент был отключен.");
             }

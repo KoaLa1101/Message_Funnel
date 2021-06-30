@@ -29,7 +29,7 @@ public class ManagementClientKeyManager implements ClientKeyManager {
             }
             switch (tcpFrame.getType()){
                 case 3:
-                    Message newMessage = Message.builder()
+                    BotMessage newBotMessage = BotMessage.builder()
                             .token(entry.getToken())
                             .messenger(entry.getMessenger())
                             .userId((String) messageContent[1])
@@ -37,14 +37,18 @@ public class ManagementClientKeyManager implements ClientKeyManager {
                             .text((String) messageContent[3])
                             .botName(entry.getBotName())
                             .build();
-                    ((ManagementClient) client).getBot().sendMessage(newMessage);
+                    ((ManagementClient) client).getBot().sendMessage(newBotMessage);
                     break;
             }
         } catch (TCPFrameFactoryException ex) {
-            throw new KeyManagerException(ex.getMessage(), ex);
+            if (ex.getCause().getMessage().contains("принудительно разорвал существующее подключение")){
+                throw new ClientDisconnectException(key);
+            } else {
+                throw new KeyManagerException(ex.getMessage(), ex);
+            }
         } catch (IncorrectFCSException ex) {
             //TODO reaction on incorrect frame
-        } catch (IllegalBlockingModeException | BufferUnderflowException ex){
+        } catch (IllegalBlockingModeException | BufferUnderflowException | ClientDisconnectException ex){
             throw new ClientDisconnectException(key);
         }
     }

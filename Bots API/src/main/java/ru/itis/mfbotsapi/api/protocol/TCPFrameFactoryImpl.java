@@ -2,11 +2,14 @@ package ru.itis.mfbotsapi.api.protocol;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import ru.itis.mfbotsapi.api.exceptions.ClientDisconnectException;
 import ru.itis.mfbotsapi.api.exceptions.IncorrectFCSException;
 import ru.itis.mfbotsapi.api.exceptions.TCPFrameFactoryException;
 
 import java.io.*;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
+import java.nio.channels.IllegalBlockingModeException;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 import java.util.HashMap;

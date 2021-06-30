@@ -38,12 +38,12 @@ public class TestServer {
                 case "/message":
                     server.sendTCPFrame(server.getTcpFrameFactory().createTCPFrame(3,
                             UUID.randomUUID().toString(),
-//                            "@ЫЫЫЫЫЫЫ2",
-//                            "ААААААААААА2",
-//                            "hPHP <3 == >3"
-                            "ААААААААААА",
-                            "ААААААААААА",
-                            "PHP <3 == >3"
+//                            "@User1",
+//                            "Nickname1",
+//                            "#Message1"
+                            "@User2",
+                            "Nickname2",
+                            "#Message2"
                     ));
                     break;
                 case "/exit":
