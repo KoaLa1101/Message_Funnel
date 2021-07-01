@@ -112,8 +112,8 @@ public class ManagementClient extends AbstractClient{
             throw new ClientException("Cannot connect client", ex);
         }
         Runnable connect = () -> {
-            try {
-                while (isWork) {
+            while (isWork) {
+                try {
                     selector.select();
                     Set<SelectionKey> selectionKeys = selector.selectedKeys();
                     Iterator<SelectionKey> iterator = selectionKeys.iterator();
@@ -128,34 +128,33 @@ public class ManagementClient extends AbstractClient{
                         }
                         iterator.remove();
                     }
-                }
-            } catch (UnresolvedAddressException ex) {
-                log.warn("Неправильный адрес, привет");
-                throw new ClientException("Unknown address", ex);
-            } catch (IOException ex) {
-                log.warn("Невозможно установить соединение с сервером: ошибка соединения.");
-                throw new ClientException("Cannot connect client", ex);
-            }
-            catch (KeyManagerException | TCPFrameFactoryException ex){
-                log.warn("Ошибка работы с сервером: ошибка при обмене данными.");
-                throw new ClientException(ex.getMessage(), ex);
-            } catch (IncorrectFCSException ex) {
-                //TODO reaction
-            } catch (ClientDisconnectException ex) {
-                ex.getSelectionKey().cancel();
-                if (slavesSet!=null){
-                    for (SlaveBotEntry slaveBotEntry: slavesSet) {
-                        if (slaveBotEntry.getSocketChannel().equals(ex.getSelectionKey().channel())){
-                            slavesSet.remove(slaveBotEntry);
-                            bot.sendMessage(WarningMessage.builder()
-                                    .text("Соединение по токену " + slaveBotEntry.getToken() + " было разорвано.")
-                                    .build());
+                } catch (UnresolvedAddressException ex) {
+                    log.warn("Неправильный адрес, привет");
+                    throw new ClientException("Unknown address", ex);
+                } catch (IOException ex) {
+                    log.warn("Невозможно установить соединение с сервером: ошибка соединения.");
+                    throw new ClientException("Cannot connect client", ex);
+                } catch (KeyManagerException | TCPFrameFactoryException ex) {
+                    log.warn("Ошибка работы с сервером: ошибка при обмене данными.");
+                    throw new ClientException(ex.getMessage(), ex);
+                } catch (IncorrectFCSException ex) {
+                    //TODO reaction
+                } catch (ClientDisconnectException ex) {
+                    ex.getSelectionKey().cancel();
+                    if (slavesSet != null) {
+                        for (SlaveBotEntry slaveBotEntry : slavesSet) {
+                            if (slaveBotEntry.getSocketChannel().equals(ex.getSelectionKey().channel())) {
+                                slavesSet.remove(slaveBotEntry);
+                                bot.sendMessage(WarningMessage.builder()
+                                        .text("Соединение по токену " + slaveBotEntry.getToken() + " было разорвано.")
+                                        .build());
+                            }
                         }
                     }
+                    log.info("Client " + ex.getSelectionKey().channel() + " was disconnected");
+                } catch (ClosedSelectorException ex) {
+                    log.info("Клиент был отключен.");
                 }
-                log.info("Client " + ex.getSelectionKey().channel() + " was disconnected");
-            } catch (ClosedSelectorException ex){
-                log.info("Клиент был отключен.");
             }
         };
         Thread connectThread = new Thread(connect);
