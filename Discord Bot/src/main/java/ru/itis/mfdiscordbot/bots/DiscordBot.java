@@ -120,16 +120,18 @@ public class DiscordBot implements MasterBot {
 
     @Override
     public void sendMessage(Message message) {
-        if (message instanceof BotMessage){
-            log.debug("Received message from server: " + message.toString());
-            updateIdentity((BotMessage) message);
-            mainMessageChannel.sendMessage(buildTextToAnswer((BotMessage) message)).queue();
-        } else if (message instanceof ErrorMessage) {
-            mainMessageChannel.sendMessage(((ErrorMessage) message).getText()).queue();
-        } else if (message instanceof WarningMessage){
-            mainMessageChannel.sendMessage(((WarningMessage) message).getText()).queue();
-        } else if (message instanceof NotificationMessage){
-            mainMessageChannel.sendMessage(((NotificationMessage) message).getText()).queue();
+        if (this.isActive()){
+            if (message instanceof BotMessage){
+                log.debug("Received message from server: " + message.toString());
+                updateIdentity((BotMessage) message);
+                mainMessageChannel.sendMessage(buildTextToAnswer((BotMessage) message)).queue();
+            } else if (message instanceof ErrorMessage) {
+                mainMessageChannel.sendMessage(((ErrorMessage) message).getText()).queue();
+            } else if (message instanceof WarningMessage){
+                mainMessageChannel.sendMessage(((WarningMessage) message).getText()).queue();
+            } else if (message instanceof NotificationMessage){
+                mainMessageChannel.sendMessage(((NotificationMessage) message).getText()).queue();
+            }
         }
     }
 
